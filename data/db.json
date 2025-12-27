@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "bcc5ec88-9e2a-46a7-8935-0977c934db2a",
+      "username": "gambles.henry@gmail.com",
+      "passwordHash": "$2b$10$dPa5DCgMcFLu2yVCUpqeGeeA7K.1KSJqIOCUxRpFxM3s1YRwMhM/e",
+      "profilePic": "bcc5ec88-9e2a-46a7-8935-0977c934db2a.jpg"
+    }
+  ],
+  "videos": {
+    "Mo Arrival Part 1.mov": {
+      "views": 3,
+      "likes": 0,
+      "dislikes": 0,
+      "comments": []
+    },
+    "Time Travel.mov": {
+      "views": 12,
+      "likes": 0,
+      "dislikes": 0,
+      "comments": [
+        {
+          "id": "20d66500-270d-47ab-a7fe-e1f884fed731",
+          "userId": "bcc5ec88-9e2a-46a7-8935-0977c934db2a",
+          "username": "gambles.henry@gmail.com",
+          "text": "Amazing - what exactly can we achieve with this time travel technology? Is there version control? 🧐",
+          "createdAt": "2025-12-25T12:44:57.194Z"
+        }
+      ]
+    }
+  },
+  "reactions": {}
+}

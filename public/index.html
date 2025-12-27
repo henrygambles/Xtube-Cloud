@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XTube</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">XTube</div>
+      <span class="tagline">Hyper-streamed like YouTube, but ours.</span>
+    </div>
+    <div class="user-block">
+      <div class="profile-thumb" id="profile-thumb"></div>
+      <div class="user-meta">
+        <div id="user-status" class="user-status">Not signed in</div>
+        <div class="auth-actions">
+          <button id="signup-toggle" class="ghost-btn">Sign up</button>
+          <button id="login-toggle" class="ghost-btn">Log in</button>
+          <button id="logout-btn" class="ghost-btn danger hidden">Log out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="auth-panels">
+    <form id="signup-form" class="auth-card hidden">
+      <div class="auth-title">Create account</div>
+      <input id="signup-username" name="username" placeholder="Username" required minlength="3" maxlength="32">
+      <input id="signup-password" name="password" type="password" placeholder="Password (6+ chars)" required minlength="6">
+      <button type="submit" class="primary">Sign up</button>
+      <div class="auth-note">One profile picture per user. You can add it after you log in.</div>
+    </form>
+    <form id="login-form" class="auth-card hidden">
+      <div class="auth-title">Welcome back</div>
+      <input id="login-username" name="username" placeholder="Username" required>
+      <input id="login-password" name="password" type="password" placeholder="Password" required>
+      <button type="submit" class="primary">Log in</button>
+    </form>
+    <form id="profile-form" class="auth-card hidden" enctype="multipart/form-data">
+      <div class="auth-title">Profile picture</div>
+      <label class="file-label">
+        <input type="file" id="profile-file" name="file" accept="image/*">
+        <span>Upload image</span>
+      </label>
+      <div class="auth-note">Stored under “Profile Pics”.</div>
+    </form>
+  </div>
+
+  <main class="layout">
+    <section class="video-column">
+      <div class="player-shell" id="player-container">
+        <video id="player" controls playsinline></video>
+        <button id="fullscreen-btn" class="fullscreen-btn">⤢ Fullscreen</button>
+      </div>
+      <div class="video-header">
+        <h1 id="video-title">Drop a video into the videos folder to get started.</h1>
+        <div class="video-meta">
+          <span id="view-count">0 views</span>
+          <span id="upload-date"></span>
+          <div class="reaction-bar">
+            <button id="like-btn" class="pill">👍 <span id="like-count">0</span></button>
+            <button id="dislike-btn" class="pill">👎 <span id="dislike-count">0</span></button>
+            <div class="ratio">
+              <div class="ratio-fill" id="ratio-fill"></div>
+              <span id="ratio-text">0% liked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="comments">
+        <div class="comments-header">
+          <h2>Comments</h2>
+          <span id="comment-count" class="muted">(0)</span>
+        </div>
+        <form id="comment-form" class="comment-form">
+          <textarea id="comment-input" placeholder="Add a public comment..." rows="3" maxlength="500"></textarea>
+          <button type="submit" class="primary">Comment</button>
+        </form>
+        <div id="comments-list" class="comments-list"></div>
+      </section>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-title">Suggested</div>
+      <div id="suggested-list" class="suggested-list"></div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    Drop .mov (or .mp4/.webm) files into the <code>videos</code> folder. The server auto-indexes and streams them with a YouTube-style player.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
