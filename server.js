@@ -17,14 +17,42 @@ const COOKIE_NAME = 'xtube_token';
 const GUEST_COOKIE = 'xtube_guest';
 const MAX_UPLOAD_MB = 8;
 
-const videosDir = path.join(__dirname, 'videos');
 const profilePicsDir = path.join(__dirname, 'Profile Pics');
 const dataDir = path.join(__dirname, 'data');
 const dbPath = path.join(dataDir, 'db.json');
 
-ensureDir(videosDir);
 ensureDir(profilePicsDir);
 ensureDir(dataDir);
+
+const cloudVideos = [
+  {
+    id: 'b8a7d19091bc6407bcb56587eef43cfb',
+    title: 'Cloudflare Stream: Launch Deck',
+    embedUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/b8a7d19091bc6407bcb56587eef43cfb/iframe?poster=https%3A%2F%2Fcustomer-jo4j2pl3ibe2d4s4.cloudflarestream.com%2Fb8a7d19091bc6407bcb56587eef43cfb%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+    posterUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/b8a7d19091bc6407bcb56587eef43cfb/thumbnails/thumbnail.jpg?time=&height=600',
+    uploadedAt: '2024-10-02T18:00:00Z',
+  },
+  {
+    id: '6406a711dca66a2cf65f221c76a0934f',
+    title: 'Cloudflare Stream: Platform Walkthrough',
+    embedUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/6406a711dca66a2cf65f221c76a0934f/iframe?poster=https%3A%2F%2Fcustomer-jo4j2pl3ibe2d4s4.cloudflarestream.com%2F6406a711dca66a2cf65f221c76a0934f%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+    posterUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/6406a711dca66a2cf65f221c76a0934f/thumbnails/thumbnail.jpg?time=&height=600',
+    uploadedAt: '2024-10-05T18:00:00Z',
+  },
+  {
+    id: '856d7c5b0a033bc414d330aa998b97fa',
+    title: 'Cloudflare Stream: Edge Delivery',
+    embedUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/856d7c5b0a033bc414d330aa998b97fa/iframe?poster=https%3A%2F%2Fcustomer-jo4j2pl3ibe2d4s4.cloudflarestream.com%2F856d7c5b0a033bc414d330aa998b97fa%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+    posterUrl:
+      'https://customer-jo4j2pl3ibe2d4s4.cloudflarestream.com/856d7c5b0a033bc414d330aa998b97fa/thumbnails/thumbnail.jpg?time=&height=600',
+    uploadedAt: '2024-10-08T18:00:00Z',
+  },
+];
 
 let db = loadDb();
 syncVideos();
@@ -207,58 +235,6 @@ app.post('/api/profile-picture', requireAuth, (req, res) => {
   });
 });
 
-app.get('/videos/:file', (req, res) => {
-  const safeName = decodeId(req.params.file);
-  const filePath = path.join(videosDir, safeName);
-  if (!filePath.startsWith(videosDir) || !fs.existsSync(filePath)) {
-    return res.status(404).end();
-  }
-
-  const stat = fs.statSync(filePath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
-
-  if (range) {
-    const match = /^bytes=(\d*)-(\d*)$/.exec(range);
-    if (!match) {
-      return res.status(416).send('Requested range not satisfiable');
-    }
-
-    let start = match[1] === '' ? NaN : parseInt(match[1], 10);
-    let end = match[2] === '' ? NaN : parseInt(match[2], 10);
-
-    // Support suffix byte ranges (e.g., bytes=-500000 to fetch moov atom)
-    if (Number.isNaN(start) && !Number.isNaN(end)) {
-      const suffixLength = Math.min(end, fileSize);
-      start = fileSize - suffixLength;
-      end = fileSize - 1;
-    } else {
-      if (Number.isNaN(start)) start = 0;
-      if (Number.isNaN(end) || end >= fileSize) end = fileSize - 1;
-    }
-
-    if (start < 0 || start >= fileSize || start > end) {
-      return res.status(416).send('Requested range not satisfiable');
-    }
-
-    const chunkSize = end - start + 1;
-    res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunkSize,
-      'Content-Type': getMimeType(filePath),
-    });
-    return fs.createReadStream(filePath, { start, end }).pipe(res);
-  }
-
-  res.writeHead(200, {
-    'Content-Length': fileSize,
-    'Content-Type': getMimeType(filePath),
-    'Accept-Ranges': 'bytes',
-  });
-  return fs.createReadStream(filePath).pipe(res);
-});
-
 app.use((req, res, next) => {
   if (req.method !== 'GET') {
     return next();
@@ -364,81 +340,59 @@ function decodeId(rawId) {
 }
 
 function syncVideos() {
-  ensureDir(videosDir);
-  const files = fs.readdirSync(videosDir).filter(isVideoFile);
+  const ids = cloudVideos.map((video) => video.id);
 
   // purge metadata for removed files
   Object.keys(db.videos).forEach((key) => {
-    if (!files.includes(key)) {
+    if (!ids.includes(key)) {
       delete db.videos[key];
       delete db.reactions[key];
     }
   });
 
-  files.forEach((file) => {
-    if (!db.videos[file]) {
-      db.videos[file] = {
+  ids.forEach((id) => {
+    if (!db.videos[id]) {
+      db.videos[id] = {
         views: 0,
         likes: 0,
         dislikes: 0,
         comments: [],
       };
     } else {
-      db.videos[file].comments = db.videos[file].comments || [];
-      db.videos[file].views = db.videos[file].views || 0;
-      db.videos[file].likes = db.videos[file].likes || 0;
-      db.videos[file].dislikes = db.videos[file].dislikes || 0;
+      db.videos[id].comments = db.videos[id].comments || [];
+      db.videos[id].views = db.videos[id].views || 0;
+      db.videos[id].likes = db.videos[id].likes || 0;
+      db.videos[id].dislikes = db.videos[id].dislikes || 0;
     }
   });
 
   persistDb();
 
-  return files
-    .map((file) => {
-      const stats = fs.statSync(path.join(videosDir, file));
-      const baseTitle = path.basename(file, path.extname(file));
-      const meta = db.videos[file];
+  return cloudVideos
+    .map((video) => {
+      const meta = db.videos[video.id];
       return {
-        id: encodeURIComponent(file),
-        filename: file,
-        title: baseTitle,
-        url: `/videos/${encodeURIComponent(file)}`,
+        id: video.id,
+        title: video.title,
+        embedUrl: video.embedUrl,
+        posterUrl: video.posterUrl,
         views: meta.views || 0,
         likes: meta.likes || 0,
         dislikes: meta.dislikes || 0,
         commentsCount: meta.comments.length,
-        uploadedAt: stats.mtime,
+        uploadedAt: video.uploadedAt,
       };
     })
-    .sort((a, b) => b.uploadedAt - a.uploadedAt);
+    .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
 }
 
 function getVideoMeta(videoId) {
-  const filePath = path.join(videosDir, videoId);
-  if (!filePath.startsWith(videosDir) || !fs.existsSync(filePath)) {
+  const exists = cloudVideos.some((video) => video.id === videoId);
+  if (!exists) {
     return null;
   }
   if (!db.videos[videoId]) {
     db.videos[videoId] = { views: 0, likes: 0, dislikes: 0, comments: [] };
   }
   return db.videos[videoId];
-}
-
-function isVideoFile(file) {
-  const allowed = ['.mp4', '.mov', '.webm', '.mkv', '.avi', '.m4v'];
-  const ext = path.extname(file).toLowerCase();
-  return allowed.includes(ext);
-}
-
-function getMimeType(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  const map = {
-    '.mp4': 'video/mp4',
-    '.mov': 'video/quicktime',
-    '.webm': 'video/webm',
-    '.mkv': 'video/x-matroska',
-    '.avi': 'video/x-msvideo',
-    '.m4v': 'video/x-m4v',
-  };
-  return map[ext] || 'application/octet-stream';
 }

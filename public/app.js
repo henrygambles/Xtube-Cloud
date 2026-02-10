@@ -7,6 +7,7 @@ const state = {
 
 const els = {
   player: document.getElementById('player'),
+  playerContainer: document.getElementById('player-container'),
   fullscreenBtn: document.getElementById('fullscreen-btn'),
   title: document.getElementById('video-title'),
   viewCount: document.getElementById('view-count'),
@@ -120,7 +121,7 @@ function toggleCard(card) {
 function wirePlayer() {
   els.fullscreenBtn.addEventListener('click', () => {
     if (!document.fullscreenElement) {
-      els.player.requestFullscreen?.();
+      els.playerContainer.requestFullscreen?.();
     } else {
       document.exitFullscreen?.();
     }
@@ -157,7 +158,7 @@ function wirePlayer() {
     }
   });
 
-  els.player.addEventListener('play', () => {
+  els.playerContainer.addEventListener('click', () => {
     if (state.currentVideo) {
       registerView(state.currentVideo);
     }
@@ -213,11 +214,11 @@ async function loadVideos() {
     state.videos = data.videos || [];
     if (!state.videos.length) {
       els.player.removeAttribute('src');
-      els.title.textContent = 'Drop a video into the videos folder to get started.';
+      els.title.textContent = 'No cloud streams are configured yet.';
       els.viewCount.textContent = '';
       els.uploadDate.textContent = '';
       els.suggestedList.innerHTML =
-        '<div class="muted">Add .mov/.mp4 files to populate the feed.</div>';
+        '<div class="muted">Add Cloudflare Stream embeds to populate the feed.</div>';
       els.commentsList.innerHTML = '';
       els.commentCount.textContent = '(0)';
       return;
@@ -246,34 +247,51 @@ async function loadVideos() {
 
 function setVideo(video) {
   state.currentVideo = video;
-  els.player.src = video.url;
+  els.player.src = video.embedUrl;
+  els.player.title = video.title;
   els.title.textContent = video.title;
   els.viewCount.textContent = `${formatCount(video.views)} views`;
   els.uploadDate.textContent = formatDate(video.uploadedAt);
   updateReactionUi(video.likes, video.dislikes);
   loadComments(video);
   renderSuggested();
+  registerView(video);
 }
 
 function renderSuggested() {
   const others = state.videos.filter((v) => v.id !== state.currentVideo.id);
   if (!others.length) {
-    els.suggestedList.innerHTML = '<div class="muted">No other videos yet.</div>';
+    els.suggestedList.innerHTML = '<div class="muted">No other streams yet.</div>';
     return;
   }
   els.suggestedList.innerHTML = '';
   others.forEach((video) => {
     const item = document.createElement('div');
     item.className = 'suggested-item';
-    item.innerHTML = `
-      <div class="thumb">.${video.filename.split('.').pop()}</div>
-      <div>
-        <p class="suggested-title">${video.title}</p>
-        <div class="suggested-meta">${formatCount(video.views)} views • ${formatDate(
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if (video.posterUrl) {
+      thumb.style.backgroundImage = `url("${video.posterUrl}")`;
+    } else {
+      thumb.textContent = 'Stream';
+    }
+
+    const meta = document.createElement('div');
+    const title = document.createElement('p');
+    title.className = 'suggested-title';
+    title.textContent = video.title;
+    const details = document.createElement('div');
+    details.className = 'suggested-meta';
+    details.textContent = `${formatCount(video.views)} views • ${formatDate(
       video.uploadedAt
-    )}</div>
-      </div>
-    `;
+    )}`;
+
+    meta.appendChild(title);
+    meta.appendChild(details);
+
+    item.appendChild(thumb);
+    item.appendChild(meta);
     item.addEventListener('click', () => setVideo(video));
     els.suggestedList.appendChild(item);
   });

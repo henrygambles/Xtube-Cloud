@@ -3,14 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XTube</title>
+  <title>XTube Cloud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap"
+    rel="stylesheet"
+  >
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="logo">XTube</div>
-      <span class="tagline">Hyper-streamed like YouTube, but ours.</span>
+      <div class="logo">XTube Cloud</div>
+      <span class="tagline">Cloud-native video streams, delivered at the edge.</span>
     </div>
     <div class="user-block">
       <div class="profile-thumb" id="profile-thumb"></div>
@@ -45,18 +51,25 @@
         <input type="file" id="profile-file" name="file" accept="image/*">
         <span>Upload image</span>
       </label>
-      <div class="auth-note">Stored under “Profile Pics”.</div>
+      <div class="auth-note">Stored in your cloud profile.</div>
     </form>
   </div>
 
   <main class="layout">
     <section class="video-column">
       <div class="player-shell" id="player-container">
-        <video id="player" controls playsinline></video>
+        <iframe
+          id="player"
+          class="stream-embed"
+          title="Cloudflare Stream Player"
+          loading="lazy"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowfullscreen="true"
+        ></iframe>
         <button id="fullscreen-btn" class="fullscreen-btn">⤢ Fullscreen</button>
       </div>
       <div class="video-header">
-        <h1 id="video-title">Drop a video into the videos folder to get started.</h1>
+        <h1 id="video-title">Select a Cloudflare stream to get started.</h1>
         <div class="video-meta">
           <span id="view-count">0 views</span>
           <span id="upload-date"></span>
@@ -85,13 +98,13 @@
     </section>
 
     <aside class="sidebar">
-      <div class="sidebar-title">Suggested</div>
+      <div class="sidebar-title">Cloud Library</div>
       <div id="suggested-list" class="suggested-list"></div>
     </aside>
   </main>
 
   <footer class="footer">
-    Drop .mov (or .mp4/.webm) files into the <code>videos</code> folder. The server auto-indexes and streams them with a YouTube-style player.
+    Cloud-native library powered by Cloudflare Stream. Likes, views, and comments stay local to this platform.
   </footer>
 
   <script src="app.js"></script>
