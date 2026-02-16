@@ -5,6 +5,8 @@ const state = {
   viewed: new Set(),
 };
 
+const DEFAULT_VIDEO_ID = '6406a711dca66a2cf65f221c76a0934f';
+
 const els = {
   player: document.getElementById('player'),
   playerContainer: document.getElementById('player-container'),
@@ -239,7 +241,9 @@ async function loadVideos() {
       return;
     }
 
-    setVideo(state.videos[0]);
+    const preferred =
+      state.videos.find((video) => video.id === DEFAULT_VIDEO_ID) || state.videos[0];
+    setVideo(preferred);
   } catch (err) {
     console.error(err);
   }

@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -17,8 +18,14 @@ const COOKIE_NAME = 'xtube_token';
 const GUEST_COOKIE = 'xtube_guest';
 const MAX_UPLOAD_MB = 8;
 
-const profilePicsDir = path.join(__dirname, 'Profile Pics');
-const dataDir = path.join(__dirname, 'data');
+const isVercel = Boolean(process.env.VERCEL);
+const isProduction = process.env.NODE_ENV === 'production' || isVercel;
+// Vercel serverless is read-only outside /tmp, so keep mutable data there.
+const runtimeRoot =
+  process.env.RUNTIME_ROOT || (isVercel ? path.join(os.tmpdir(), 'xtube-cloud') : __dirname);
+const profilePicsDir = process.env.PROFILE_PICS_DIR
+  || path.join(runtimeRoot, isVercel ? 'profile-pics' : 'Profile Pics');
+const dataDir = process.env.DATA_DIR || path.join(runtimeRoot, 'data');
 const dbPath = path.join(dataDir, 'db.json');
 
 ensureDir(profilePicsDir);
@@ -242,9 +249,11 @@ app.use((req, res, next) => {
   return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`XTube server running at http://${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`XTube server running at http://${HOST}:${PORT}`);
+  });
+}
 
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -315,6 +324,7 @@ function setAuthCookie(res, userId) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: isProduction,
     maxAge: 1000 * 60 * 60 * 24 * 14,
   });
 }
@@ -396,3 +406,5 @@ function getVideoMeta(videoId) {
   }
   return db.videos[videoId];
 }
+
+module.exports = app;
