@@ -10,7 +10,6 @@ const DEFAULT_VIDEO_ID = '6406a711dca66a2cf65f221c76a0934f';
 const els = {
   player: document.getElementById('player'),
   playerContainer: document.getElementById('player-container'),
-  fullscreenBtn: document.getElementById('fullscreen-btn'),
   title: document.getElementById('video-title'),
   viewCount: document.getElementById('view-count'),
   uploadDate: document.getElementById('upload-date'),
@@ -121,14 +120,6 @@ function toggleCard(card) {
 }
 
 function wirePlayer() {
-  els.fullscreenBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      els.playerContainer.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
-    }
-  });
-
   els.likeBtn.addEventListener('click', () => react('like'));
   els.dislikeBtn.addEventListener('click', () => react('dislike'));
 
